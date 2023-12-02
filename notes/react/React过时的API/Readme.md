@@ -1,0 +1,9 @@
+# React过时的API
+## Children  
+## cloneElement  
+## Component  
+## createElement  
+## createFactory  
+## createRef  
+## isValidElement  
+## PureComponent  
