@@ -68,7 +68,7 @@ export default function App() {
 
 > 上面属性属于是动态的子组件
 
-### 调用渲染属性以自定义渲染
+### 调用渲染属性以自定义渲染，prop render
 
 ```jsx
 import TabSwitcher from './TabSwitcher.js';
@@ -96,3 +96,5 @@ export default function App() {
 ### 总结
 
 通过以上三个替换使用`Children`的例子来看，原本有五个`API`,由于使用上面的的方式可以替换掉`forEach()、map()`二个，其它的三个可以由替换掉的这二个来获得。比如要获取子组件的个数可以使用`props.rows.length`，再比如获取是否唯一的子组件可以使用`props.rows.length === 1`来获取。还有一个是`Children.toArray()`这个不需要进行转换了，`props.rows`本来就定义为是一个数据。
+
+以上三种代码片段也是三种组件编码风格，还有一种是高阶组件编码风格。
