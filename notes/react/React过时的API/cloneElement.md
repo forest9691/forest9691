@@ -1,5 +1,3 @@
-
-
 ## cloneElement(element, props, ...children)
 
 `cloneElement` 允许你基于 `element` 创建一个新的 React 元素，但新元素具有不同的 `props` 和 `children`
@@ -38,6 +36,35 @@ console.log(clonedElement); // <Row title="Cabbage" isHighlighted={true}>Goodbye
 - `ref`：原始的 `element.ref`，除非它被 `props.ref` 覆盖。
 - `key`：原始的 `element.key`，除非它被 `props.key` 覆盖。
 
+### cloneElement举例
+
+下面是分层后的组件，如果想看未分层的请看下面提供案例
+
+```jsx
+import { Children, cloneElement, useState } from 'react';
+
+export default function List({ children /* this.props.children */ }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  return (
+    <div className="List">
+      {Children.map(children, (child, index) =>
+        cloneElement(child, {
+          isHighlighted: index === selectedIndex 
+        })
+      )}
+      <hr />
+      <button onClick={() => {
+        setSelectedIndex(i =>
+          (i + 1) % Children.count(children)
+        );
+      }}>
+        下一步
+      </button>
+    </div>
+  );
+}
+```
+
 ### 通过 props 传递数据 
 
 接受类似 `renderItem` 这样的 *render prop* 代替 `cloneElement` 的用法。在这里，`List` 接收 `renderItem` 作为 props。`List` 为数组每一项调用 `renderItem`，并传递 `isHighlighted` 作为参数：
@@ -63,6 +90,7 @@ export default function List({ items, renderItem }) {
 <List
   items={products}
   renderItem={(product, isHighlighted) =>
+    <!-- Row组件每次更新都会重新渲染，List内部对数据进行了map操作 -->
     <Row
       key={product.id}
       title={product.title}
@@ -155,7 +183,7 @@ export default function useList(items) {
 
 ```jsx
 export default function App() {
-
+  // 自定义Hook是封装Hook逻辑的方式
   const [selected, onNext] = useList(products);
 
   return (
@@ -175,3 +203,206 @@ export default function App() {
   );
 }
 ```
+
+
+
+## 案例
+
+```jsx
+import {useState, useCallback} from 'react'
+import List from './List.js';
+import Row from './Row.js';
+import { products } from './data.js';
+
+export default function App() {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const onClick = useCallback(function() {
+      setSelectedIndex(i =>
+        (i + 1) % products.length
+      );
+  },[]);
+  return (
+    <>
+      <!-- 这个组件是没有分层的组件 -->
+      <div className="List">
+        {products.map((product, index) =>
+          <Row
+            key={product.id}
+            title={product.title} 
+            isHighlighted={ index === selectedIndex }
+          />
+        )}
+      </div>   
+      <hr />
+      <button onClick={onClick}>
+        下一步
+      </button>
+    </>
+  );
+}
+```
+
+以上代码是分成二个组件还是分成一个组件？
+
+如下面这种分层是没有意义的
+
+```jsx
+import {useState, useCallback, memo} from 'react'
+import Row from './Row.js';
+import { products } from './data.js';
+
+const Button = memo(function({onClick, children}){
+  console.log("button")
+  return (
+      <button onClick={onClick}>
+        下一步
+      </button>
+  )
+});
+
+const L = function({ children }){
+  return null;
+}
+const List = function({children}) {
+  return (
+    <div className="List">
+      {children}
+    </div>
+  );
+}
+
+export default function App() {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const onClick = useCallback(function() {
+      setSelectedIndex(i =>
+        (i + 1) % products.length
+      );
+  },[]);
+  return (
+    <>
+      <!-- 如果这里使用的不是第三方组件库，仅仅是把className封装起来这么分是没有意义的 -->
+      <List>
+        {products.map((product, index) =>
+          <Row
+            key={product.id}
+            title={product.title} 
+            isHighlighted={ index === selectedIndex }
+          />
+        )}
+      </List>   
+      <hr />
+      <!-- 如果这里使用的不是第三方组件库，仅仅是把className封装起来这么分是没有意义的 -->
+      <Button onClick={onClick}></Button>
+    </>
+  );
+}
+```
+
+可以将按钮封装到`<List>`组件中，使它们成为一个组件,使用的是`cloneElement`
+
+```jsx
+import { useState, useCallback, memo, Children, cloneElement } from 'react'
+import Row from './Row.js';
+import { products } from './data.js';
+
+const List = function ({ children }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const onClick = useCallback(function () {
+    setSelectedIndex(i =>
+      (i + 1) % products.length
+    );
+  }, []);
+
+  return (
+    <>
+      <div className="List">
+        {
+          Children.map(children, (children, index) => {
+            return cloneElement(children, {
+              isHighlighted: index === selectedIndex
+            });
+          })
+        }
+      </div>
+      <hr />
+      {/* 这里没有必要为了className再封装了， */}
+      <button onClick={onClick}>
+        下一步
+      </button>
+    </>
+  );
+}
+
+export default function App() {
+
+  return (
+    <>
+      <List>
+        {products.map((product, index) =>
+          <Row
+            key={product.id}
+            title={product.title}
+          />
+        )}
+      </List>
+    </>
+  );
+}
+```
+
+下面不使用`cloneElement`
+
+```jsx
+import { useState, useCallback, memo, Children } from 'react'
+import Row from './Row.js';
+import { products } from './data.js';
+
+const List = function ({ products, renderRow }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  
+  const onClick = useCallback(function () {
+    setSelectedIndex(i =>
+      (i + 1) % products.length
+    );
+  }, [products]);
+
+  return (
+    <>
+      <div className="List">
+        {
+          products.map((product, index) => {
+            const isHighlighted = index === selectedIndex;
+            return renderRow(product, isHighlighted, selectedIndex);
+          })
+        }
+      </div>
+      <hr />
+      {/* 这里没有必要为了className再封装了， */}
+      <button onClick={onClick}>
+        下一步
+      </button>
+    </>
+  );
+}
+
+export default function App() {
+
+  return (
+    <>
+      <List products={products} renderRow={(product, isHighlighted)=>{
+        return (
+          <Row
+            key={product.id}
+            title={product.title}
+            isHighlighted={isHighlighted}
+          />
+        )
+      }}>
+      </List>
+    </>
+  );
+}
+```
+
+
+
