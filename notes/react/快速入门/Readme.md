@@ -18,6 +18,10 @@ function MyButton() {
 
 ```jsx
 <img className="avatar" /> // 这种方式可以用<link>引入css文件
+// or
+<img className={"name"} />
+// or
+<img className={["name", "age", "sex"]} />
 ```
 
 ```jsx
