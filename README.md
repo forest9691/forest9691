@@ -24,4 +24,7 @@ Here are some ideas to get you started:
 - 😄 Pronouns: ...
 - ⚡ Fun fact: ...
 -->
+
+Forest9691是一名软件设计师(已领证)，目前从事餐饮行业SAAS软件WEB方面的开发工作，带领过3-5人的团队。最早从事后端Java方面的开发，后来转型为WEB方面的开发。WEB方面目前使用的技术栈主要有React、Redux、Router、TS，使用的的是AntD的UI组件。
+
 @since 2015
